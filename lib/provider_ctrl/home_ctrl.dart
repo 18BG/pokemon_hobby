@@ -24,13 +24,26 @@ class HomeCtrl extends StateNotifier<HData> {
   Future<void> chargeInfos() async {
     if (state.data == null) {
       Response? res = await _dioService.fetch(
-        "https://pokeapi.co/api/v2/pokemon?limit=5&offset=0",
+        "https://pokeapi.co/api/v2/pokemon?limit=15&offset=0",
       );
       if (res != null) {
         PokemonListData pkemon = PokemonListData.fromJson(res.data);
         state = state.copyWith(data: pkemon);
-        debugPrint("${pkemon.results}");
+
+        debugPrint("${state.data?.results!.first}");
       }
-    } else {}
+    } else {
+      if (state.data?.next != null) {
+        Response? response = await _dioService.fetch(state.data!.next!);
+        if (response != null && response.data != null) {
+          PokemonListData data = PokemonListData.fromJson(response.data);
+          state = state.copyWith(
+            data: data.copyWith(
+              results: [...?state.data?.results, ...?data.results],
+            ),
+          );
+        }
+      }
+    }
   }
 }

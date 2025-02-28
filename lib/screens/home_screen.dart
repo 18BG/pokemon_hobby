@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pokemon_app/provider_ctrl/home_ctrl.dart';
+import 'package:pokemon_app/screens/models/pokemon.dart';
 import 'package:pokemon_app/screens/models/screen_data.dart';
+import 'package:pokemon_app/widgets/items.dart';
 
 final homeCtrlProvider = StateNotifierProvider((ref) {
   return HomeCtrl(HData.initial());
@@ -17,6 +19,29 @@ class HomeScreen extends ConsumerStatefulWidget {
 class _HomeScreenState extends ConsumerState<HomeScreen> {
   late HomeCtrl _homeCtrl;
   late HData _hData;
+  final ScrollController _scrollController = ScrollController();
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController.addListener(_onScrollEnd);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_onScrollEnd);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _onScrollEnd() {
+    if (_scrollController.offset >=
+            _scrollController.position.maxScrollExtent * 1 &&
+        !_scrollController.position.outOfRange) {
+      _homeCtrl.chargeInfos();
+      print("Get more data");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -54,9 +79,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           SizedBox(
             height: MediaQuery.sizeOf(context).height * 0.60,
             child: ListView.builder(
+              controller: _scrollController,
               itemCount: _hData.data?.results?.length ?? 0,
               itemBuilder: (context, index) {
-                return ListTile(title: Text(index.toString()));
+                PokemonListResult poke = _hData.data!.results![index];
+                return Items(pokeUrl: poke.url!);
               },
             ),
           ),
